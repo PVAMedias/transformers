@@ -1045,7 +1045,10 @@ if __name__ == "__main__":
         with open(os.path.join(directory, "selected_warnings.json")) as fp:
             selected_warnings = json.load(fp)
 
-    with open("model_results.json", "w", encoding="UTF-8") as fp:
+    if not os.path.isdir(os.path.join(os.getcwd(), "test_failure_tables")):
+        os.makedirs(os.path.join(os.getcwd(), "test_failure_tables"))
+
+    with open("test_failure_tables/model_results.json", "w", encoding="UTF-8") as fp:
         json.dump(model_results, fp, indent=4, ensure_ascii=False)
 
     message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings)
