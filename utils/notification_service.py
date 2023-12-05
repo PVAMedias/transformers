@@ -978,15 +978,15 @@ if __name__ == "__main__":
         "Torch CUDA extension tests": "run_tests_torch_cuda_extensions_gpu_test_reports",
     }
 
-    if ci_event in ["push", "Nightly CI"] or ci_event.startswith("Past CI"):
-        del additional_files["Examples directory"]
-        del additional_files["PyTorch pipelines"]
-        del additional_files["TensorFlow pipelines"]
-    elif ci_event.startswith("Scheduled CI (AMD)"):
-        del additional_files["TensorFlow pipelines"]
-        del additional_files["Torch CUDA extension tests"]
-    elif ci_event.startswith("Push CI (AMD)"):
-        additional_files = {}
+    # if ci_event in ["push", "Nightly CI"] or ci_event.startswith("Past CI"):
+    #     del additional_files["Examples directory"]
+    #     del additional_files["PyTorch pipelines"]
+    #     del additional_files["TensorFlow pipelines"]
+    # elif ci_event.startswith("Scheduled CI (AMD)"):
+    #     del additional_files["TensorFlow pipelines"]
+    #     del additional_files["Torch CUDA extension tests"]
+    # elif ci_event.startswith("Push CI (AMD)"):
+    additional_files = {}
 
     additional_results = {
         key: {
@@ -1044,6 +1044,9 @@ if __name__ == "__main__":
         directory = available_artifacts["warnings_in_ci"].paths[0]["path"]
         with open(os.path.join(directory, "selected_warnings.json")) as fp:
             selected_warnings = json.load(fp)
+
+    with open("model_results.json", "w", encoding="UTF-8") as fp:
+        json.dump(model_results, fp, indent=4, ensure_ascii=False)
 
     message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings)
 
