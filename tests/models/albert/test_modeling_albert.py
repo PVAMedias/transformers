@@ -288,13 +288,16 @@ class AlbertModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
         self.config_tester = ConfigTester(self, config_class=AlbertConfig, hidden_size=37)
 
     def test_config(self):
+        assert 1 == 2
         self.config_tester.run_common_tests()
 
     def test_model(self):
+        assert 2 == 3
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         self.model_tester.create_and_check_model(*config_and_inputs)
 
     def test_for_pretraining(self):
+        assert 3 == 4
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         self.model_tester.create_and_check_for_pretraining(*config_and_inputs)
 
