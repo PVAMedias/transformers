@@ -686,6 +686,10 @@ class Message:
 
                     time.sleep(1)
 
+        prev_model_results = {}
+        if "test_failure_tables" in self.prev_ci_results and "model_results.json" in self.prev_ci_results["test_failure_tables"]:
+            prev_model_results = json.loads(self.prev_ci_results["test_failure_tables"]["model_results.json"])
+
         MAX_ERROR_TEXT = 3000 - len("[Truncated]")
         failure_text = ""
         for job, job_result in sorted_dict:
@@ -693,10 +697,8 @@ class Message:
                 for device, failures in job_result["failures"].items():
 
                     prev_error_lines = {}
-                    if "test_failure_tables" in self.prev_ci_results and "model_results.json" in self.prev_ci_results["test_failure_tables"]:
-                        if job in self.prev_ci_results["test_failure_tables"]["model_results.json"]:
-                            if device in self.prev_ci_results["test_failure_tables"]["model_results.json"][job]["failures"]:
-                                prev_error_lines = set(error["line"] for error in self.prev_ci_results["test_failure_tables"]["model_results.json"][job]["failures"][device])
+                    if job in prev_model_results and device in prev_model_results[job]["failures"]:
+                        prev_error_lines = set(error["line"] for error in prev_model_results[job]["failures"][device])
 
                     url = None
                     if job_result["job_link"] is not None and job_result["job_link"][device] is not None:
