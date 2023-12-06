@@ -686,6 +686,42 @@ class Message:
 
                     time.sleep(1)
 
+        MAX_ERROR_TEXT = 3000 - len("[Truncated]")
+        failure_text = ""
+        for job, job_result in sorted_dict:
+            if len(job_result["failures"]):
+                for device, failures in job_result["failures"].items():
+                    for idx, error in enumerate(failures):
+                        new_text = failure_text + f'{device}: {error["line"]}_\n\n'
+                        if len(new_text) > MAX_ERROR_TEXT:
+                            # `failure_text` here has length <= 3000
+                            failure_text = failure_text + "[Truncated]"
+                            break
+                        # `failure_text` here has length <= MAX_ERROR_TEXT
+                        failure_text = new_text
+                    if failure_text.endswith("[Truncated]"):
+                        break
+            if failure_text.endswith("[Truncated]"):
+                break
+
+        if failure_text:
+            blocks = [
+                {"type": "header", "text": {"type": "plain_text", "text": "New model failures", "emoji": True}},
+                {"type": "section", "text": {"type": "mrkdwn", "text": failure_text}},
+            ]
+
+            print("Sending the following reply")
+            print(json.dumps({"blocks": blocks}))
+
+            client.chat_postMessage(
+                channel=os.environ["CI_SLACK_REPORT_CHANNEL_ID"],
+                text=f"Results for new failures",
+                blocks=blocks,
+                thread_ts=self.thread_ts["ts"],
+            )
+
+            time.sleep(1)
+
 
 def retrieve_artifact(artifact_path: str, gpu: Optional[str]):
     if gpu not in [None, "single", "multi"]:
@@ -1056,6 +1092,7 @@ if __name__ == "__main__":
     with open("test_failure_tables/model_results.json", "w", encoding="UTF-8") as fp:
         json.dump(model_results, fp, indent=4, ensure_ascii=False)
 
+    prev_tables = None
     target_workflow = "huggingface/transformers/.github/workflows/self-scheduled.yml@refs/heads/main"
     target_workflow = "huggingface/transformers/.github/workflows/self-scheduled.yml@refs/heads/color_report"
     if os.environ.get("CI_WORKFLOW_REF") == target_workflow:
