@@ -458,6 +458,7 @@ class AlignModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
         self.model_tester = AlignModelTester(self)
 
     def test_model(self):
+        assert 1 == 2
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         self.model_tester.create_and_check_model(*config_and_inputs)
 
@@ -483,6 +484,7 @@ class AlignModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
 
     # override as the `temperature` parameter initilization is different for ALIGN
     def test_initialization(self):
+        assert 1 == 2
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
 
         configs_no_init = _config_zero_init(config)
