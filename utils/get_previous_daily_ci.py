@@ -19,7 +19,7 @@ def get_daily_ci_runs(token, num_runs=7):
 
     url = f"https://api.github.com/repos/huggingface/transformers/actions/workflows/{workflow_id}/runs"
     # On `main` branch + event being `schedule` + not returning PRs + only `num_runs` results
-    url += f"?branch=main&event=schedule&exclude_pull_requests=true&per_page={num_runs}"
+    url += f"?branch=color_report&exclude_pull_requests=true&per_page={num_runs}"
 
     result = requests.get(url, headers=headers).json()
 
