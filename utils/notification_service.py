@@ -1062,15 +1062,15 @@ if __name__ == "__main__":
             artifact_names=artifact_names, output_dir=output_dir, token=os.environ["ACCESS_REPO_INFO_TOKEN"]
         )
 
+        print("Hello ....")
         # if the last run produces artifact named `test_failure_tables`
         if (
             "test_failure_tables" in prev_tables
-            and "test_failure_tables/model_results.json" in prev_tables["test_failure_tables"]
+            and "model_results.json" in prev_tables["test_failure_tables"]
         ):
-            with open("test_failure_tables/model_results.json", "r", encoding="UTF-8") as fp:
-                prev_model_results = json.load(fp)
-                print(prev_model_results)
-                print("Hello ....")
+            prev_model_failures = prev_tables["test_failure_tables"]["model_results.json"]
+            print(prev_model_failures)
+            print("Hello 2....")
 
     message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings)
 
