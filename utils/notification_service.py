@@ -695,7 +695,7 @@ class Message:
                     prev_error_lines = {}
                     if job in self.prev_ci_results:
                         if device in self.prev_ci_results[job]["failures"]:
-                            prev_error_lines = set(error["line"] for error in self.prev_ci_results[job]["failures"])
+                            prev_error_lines = set(error["line"] for error in self.prev_ci_results[job]["failures"][device])
 
                     url = None
                     if job_result["job_link"] is not None and job_result["job_link"][device] is not None:
