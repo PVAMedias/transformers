@@ -693,9 +693,10 @@ class Message:
                 for device, failures in job_result["failures"].items():
 
                     prev_error_lines = {}
-                    if job in self.prev_ci_results["test_failure_tables"]["model_results.json"]:
-                        if device in self.prev_ci_results[job]["failures"]:
-                            prev_error_lines = set(error["line"] for error in self.prev_ci_results["test_failure_tables"]["model_results.json"][job]["failures"][device])
+                    if "test_failure_tables" in self.prev_ci_results and "model_results.json" in self.prev_ci_results["test_failure_tables"]:
+                        if job in self.prev_ci_results["test_failure_tables"]["model_results.json"]:
+                            if device in self.prev_ci_results[job]["failures"]:
+                                prev_error_lines = set(error["line"] for error in self.prev_ci_results["test_failure_tables"]["model_results.json"][job]["failures"][device])
 
                     url = None
                     if job_result["job_link"] is not None and job_result["job_link"][device] is not None:
