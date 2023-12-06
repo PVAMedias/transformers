@@ -692,7 +692,7 @@ class Message:
             if len(job_result["failures"]):
                 for device, failures in job_result["failures"].items():
                     for idx, error in enumerate(failures):
-                        new_text = failure_text + f'{device}: {error["line"]}_\n\n'
+                        new_text = failure_text + f'device: {device} gpu\n{error["line"]}\n\n'
                         if len(new_text) > MAX_ERROR_TEXT:
                             # `failure_text` here has length <= 3000
                             failure_text = failure_text + "[Truncated]"
