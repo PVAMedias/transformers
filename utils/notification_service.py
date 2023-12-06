@@ -100,7 +100,7 @@ def dicts_to_sum(objects: Union[Dict[str, Dict], List[dict]]):
 
 class Message:
     def __init__(
-        self, title: str, ci_title: str, model_results: Dict, additional_results: Dict, selected_warnings: List = None
+        self, title: str, ci_title: str, model_results: Dict, additional_results: Dict, selected_warnings: List = None, prev_ci_results = None,
     ):
         self.title = title
         self.ci_title = ci_title
@@ -149,6 +149,8 @@ class Message:
         if selected_warnings is None:
             selected_warnings = []
         self.selected_warnings = selected_warnings
+
+        self.prev_ci_results = prev_ci_results
 
     @property
     def time(self) -> str:
@@ -421,15 +423,7 @@ class Message:
         with open(file_path, "w", encoding="UTF-8") as fp:
             fp.write(module_failures_report)
 
-        target_workflow = "huggingface/transformers/.github/workflows/self-scheduled.yml@refs/heads/main"
-        if os.environ.get("CI_WORKFLOW_REF") == target_workflow:
-            # Get the last previously completed CI's failure tables
-            artifact_names = ["test_failure_tables"]
-            output_dir = os.path.join(os.getcwd(), "previous_reports")
-            os.makedirs(output_dir, exist_ok=True)
-            prev_tables = get_last_daily_ci_reports(
-                artifact_names=artifact_names, output_dir=output_dir, token=os.environ["ACCESS_REPO_INFO_TOKEN"]
-            )
+        if self.prev_ci_results is not None:
 
             # if the last run produces artifact named `test_failure_tables`
             if (
@@ -643,6 +637,17 @@ class Message:
                     text = "\n".join(
                         sorted([f"*{k}*: {v[device]}" for k, v in job_result["failed"].items() if v[device]])
                     )
+
+                if self.prev_ci_results is not None:
+                    print("Hello ....")
+                    # if the last run produces artifact named `test_failure_tables`
+                    if (
+                        "test_failure_tables" in self.prev_ci_results
+                        and "model_results.json" in self.prev_ci_results["test_failure_tables"]
+                    ):
+                        prev_model_failures = self.prev_ci_results["test_failure_tables"]["model_results.json"]
+                        print(prev_model_failures)
+                        print("Hello 2....")
 
                     blocks = self.get_reply_blocks(job, job_result, failures, device, text=text)
 
@@ -1062,17 +1067,7 @@ if __name__ == "__main__":
             artifact_names=artifact_names, output_dir=output_dir, token=os.environ["ACCESS_REPO_INFO_TOKEN"]
         )
 
-        print("Hello ....")
-        # if the last run produces artifact named `test_failure_tables`
-        if (
-            "test_failure_tables" in prev_tables
-            and "model_results.json" in prev_tables["test_failure_tables"]
-        ):
-            prev_model_failures = prev_tables["test_failure_tables"]["model_results.json"]
-            print(prev_model_failures)
-            print("Hello 2....")
-
-    message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings)
+    message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings, prev_ci_results=prev_tables)
 
     # # send report only if there is any failure (for push CI)
     # if message.n_failures or (ci_event != "push" and not ci_event.startswith("Push CI (AMD)")):
