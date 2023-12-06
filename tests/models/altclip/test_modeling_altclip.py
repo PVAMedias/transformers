@@ -444,12 +444,12 @@ class AltCLIPModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase)
         self.model_tester = AltCLIPModelTester(self)
 
     def test_model(self):
+        assert 7 == 6
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         self.model_tester.create_and_check_model(*config_and_inputs)
 
-    @unittest.skip(reason="Hidden_states is tested in individual model tests")
     def test_hidden_states_output(self):
-        pass
+        assert False
 
     @unittest.skip(reason="Inputs_embeds is tested in individual model tests")
     def test_inputs_embeds(self):
