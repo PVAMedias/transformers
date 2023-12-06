@@ -218,6 +218,7 @@ class AutoformerModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCa
         self.config_tester = ConfigTester(self, config_class=AutoformerConfig, has_text_modality=False)
 
     def test_config(self):
+        assert 1 == 2
         self.config_tester.run_common_tests()
 
     def test_save_load_strict(self):

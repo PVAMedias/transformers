@@ -100,7 +100,7 @@ def dicts_to_sum(objects: Union[Dict[str, Dict], List[dict]]):
 
 class Message:
     def __init__(
-        self, title: str, ci_title: str, model_results: Dict, additional_results: Dict, selected_warnings: List = None, prev_ci_results = None,
+        self, title: str, ci_title: str, model_results: Dict, additional_results: Dict, selected_warnings: List = None, prev_ci_artifacts = None,
     ):
         self.title = title
         self.ci_title = ci_title
@@ -150,7 +150,7 @@ class Message:
             selected_warnings = []
         self.selected_warnings = selected_warnings
 
-        self.prev_ci_results = prev_ci_results
+        self.prev_ci_artifacts = prev_ci_artifacts
 
     @property
     def time(self) -> str:
@@ -400,8 +400,6 @@ class Message:
 
         # Save the complete (i.e. no truncation) failure tables (of the current workflow run)
         # (to be uploaded as artifacts)
-        if not os.path.isdir(os.path.join(os.getcwd(), "test_failure_tables")):
-            os.makedirs(os.path.join(os.getcwd(), "test_failure_tables"))
 
         model_failures_report = prepare_reports(
             title="These following model modules had failures",
@@ -409,7 +407,7 @@ class Message:
             reports=sorted_model_reports,
             to_truncate=False,
         )
-        file_path = os.path.join(os.getcwd(), "test_failure_tables/model_failures_report.txt")
+        file_path = os.path.join(os.getcwd(), "prev_ci_results/model_failures_report.txt")
         with open(file_path, "w", encoding="UTF-8") as fp:
             fp.write(model_failures_report)
 
@@ -419,19 +417,19 @@ class Message:
             reports=sorted_module_reports,
             to_truncate=False,
         )
-        file_path = os.path.join(os.getcwd(), "test_failure_tables/module_failures_report.txt")
+        file_path = os.path.join(os.getcwd(), "prev_ci_results/module_failures_report.txt")
         with open(file_path, "w", encoding="UTF-8") as fp:
             fp.write(module_failures_report)
 
-        if self.prev_ci_results is not None:
+        if self.prev_ci_artifacts is not None:
 
-            # if the last run produces artifact named `test_failure_tables`
+            # if the last run produces artifact named `prev_ci_results`
             if (
-                "test_failure_tables" in prev_tables
-                and "model_failures_report.txt" in prev_tables["test_failure_tables"]
+                "prev_ci_results" in self.prev_ci_artifacts
+                and "model_failures_report.txt" in self.prev_ci_artifacts["prev_ci_results"]
             ):
                 # Compute the difference of the previous/current (model failure) table
-                prev_model_failures = prev_tables["test_failure_tables"]["model_failures_report.txt"]
+                prev_model_failures = self.prev_ci_artifacts["prev_ci_results"]["model_failures_report.txt"]
                 entries_changed = self.compute_diff_for_failure_reports(model_failures_report, prev_model_failures)
                 if len(entries_changed) > 0:
                     # Save the complete difference
@@ -441,7 +439,7 @@ class Message:
                         reports=entries_changed,
                         to_truncate=False,
                     )
-                    file_path = os.path.join(os.getcwd(), "test_failure_tables/changed_model_failures_report.txt")
+                    file_path = os.path.join(os.getcwd(), "prev_ci_results/changed_model_failures_report.txt")
                     with open(file_path, "w", encoding="UTF-8") as fp:
                         fp.write(diff_report)
 
@@ -638,16 +636,13 @@ class Message:
                         sorted([f"*{k}*: {v[device]}" for k, v in job_result["failed"].items() if v[device]])
                     )
 
-                if self.prev_ci_results is not None:
-                    print("Hello ....")
-                    # if the last run produces artifact named `test_failure_tables`
+                if self.prev_ci_artifacts is not None:
+                    # if the last run produces artifact named `prev_ci_results`
                     if (
-                        "test_failure_tables" in self.prev_ci_results
-                        and "model_results.json" in self.prev_ci_results["test_failure_tables"]
+                        "prev_ci_results" in self.prev_ci_artifacts
+                        and "model_results.json" in self.prev_ci_artifacts["prev_ci_results"]
                     ):
-                        prev_model_failures = self.prev_ci_results["test_failure_tables"]["model_results.json"]
-                        print(prev_model_failures)
-                        print("Hello 2....")
+                        prev_model_failures = self.prev_ci_artifacts["prev_ci_results"]["model_results.json"]
 
                     blocks = self.get_reply_blocks(job, job_result, failures, device, text=text)
 
@@ -687,8 +682,8 @@ class Message:
                     time.sleep(1)
 
         prev_model_results = {}
-        if "test_failure_tables" in self.prev_ci_results and "model_results.json" in self.prev_ci_results["test_failure_tables"]:
-            prev_model_results = json.loads(self.prev_ci_results["test_failure_tables"]["model_results.json"])
+        if "prev_ci_results" in self.prev_ci_artifacts and "model_results.json" in self.prev_ci_artifacts["prev_ci_artifacts"]:
+            prev_model_results = json.loads(self.prev_ci_artifacts["prev_ci_results"]["model_results.json"])
 
         MAX_ERROR_TEXT = 3000 - len("[Truncated]")
         failure_text = ""
@@ -1106,25 +1101,25 @@ if __name__ == "__main__":
         with open(os.path.join(directory, "selected_warnings.json")) as fp:
             selected_warnings = json.load(fp)
 
-    if not os.path.isdir(os.path.join(os.getcwd(), "test_failure_tables")):
-        os.makedirs(os.path.join(os.getcwd(), "test_failure_tables"))
+    if not os.path.isdir(os.path.join(os.getcwd(), "prev_ci_results")):
+        os.makedirs(os.path.join(os.getcwd(), "prev_ci_results"))
 
-    with open("test_failure_tables/model_results.json", "w", encoding="UTF-8") as fp:
+    with open("prev_ci_results/model_results.json", "w", encoding="UTF-8") as fp:
         json.dump(model_results, fp, indent=4, ensure_ascii=False)
 
-    prev_tables = None
+    prev_ci_artifacts = None
     target_workflow = "huggingface/transformers/.github/workflows/self-scheduled.yml@refs/heads/main"
     target_workflow = "huggingface/transformers/.github/workflows/self-scheduled.yml@refs/heads/color_report"
     if os.environ.get("CI_WORKFLOW_REF") == target_workflow:
         # Get the last previously completed CI's failure tables
-        artifact_names = ["test_failure_tables"]
+        artifact_names = ["prev_ci_results"]
         output_dir = os.path.join(os.getcwd(), "previous_reports")
         os.makedirs(output_dir, exist_ok=True)
-        prev_tables = get_last_daily_ci_reports(
+        prev_ci_artifacts = get_last_daily_ci_reports(
             artifact_names=artifact_names, output_dir=output_dir, token=os.environ["ACCESS_REPO_INFO_TOKEN"]
         )
 
-    message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings, prev_ci_results=prev_tables)
+    message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings, prev_ci_artifacts=prev_ci_artifacts)
 
     # send report only if there is any failure (for push CI)
     if message.n_failures or (ci_event != "push" and not ci_event.startswith("Push CI (AMD)")):
