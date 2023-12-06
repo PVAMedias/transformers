@@ -1069,7 +1069,7 @@ if __name__ == "__main__":
 
     message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings, prev_ci_results=prev_tables)
 
-    # # send report only if there is any failure (for push CI)
-    # if message.n_failures or (ci_event != "push" and not ci_event.startswith("Push CI (AMD)")):
-    #     message.post()
-    #     message.post_reply()
+    # send report only if there is any failure (for push CI)
+    if message.n_failures or (ci_event != "push" and not ci_event.startswith("Push CI (AMD)")):
+        message.post()
+        message.post_reply()
