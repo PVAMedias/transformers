@@ -692,11 +692,20 @@ class Message:
             if len(job_result["failures"]):
                 for device, failures in job_result["failures"].items():
 
+                    prev_error_lines = {}
+                    if job in self.prev_ci_results:
+                        if device in self.prev_ci_results[job]["failures"]:
+                            prev_error_lines = set(error["line"] for error in self.prev_ci_results[job]["failures"])
+
                     url = None
                     if job_result["job_link"] is not None and job_result["job_link"][device] is not None:
                         url = job_result["job_link"][device]
 
                     for idx, error in enumerate(failures):
+
+                        if error["line"] in prev_error_lines:
+                            continue
+
                         if url is not None:
                             new_text = failure_text + f'device: {device} gpu\n<{url}|{error["line"]}>\n\n'
                         else:
