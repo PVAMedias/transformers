@@ -691,8 +691,16 @@ class Message:
         for job, job_result in sorted_dict:
             if len(job_result["failures"]):
                 for device, failures in job_result["failures"].items():
+
+                    url = None
+                    if job_result["job_link"] is not None and job_result["job_link"][device] is not None:
+                        url = job_result["job_link"][device]
+
                     for idx, error in enumerate(failures):
-                        new_text = failure_text + f'device: {device} gpu\n{error["line"]}\n\n'
+                        if url is not None:
+                            new_text = failure_text + f'device: {device} gpu\n<{url}|{error["line"]}>\n\n'
+                        else:
+                            new_text = failure_text + f'device: {device} gpu\n{error["line"]}\n\n'
                         if len(new_text) > MAX_ERROR_TEXT:
                             # `failure_text` here has length <= 3000
                             failure_text = failure_text + "[Truncated]"
