@@ -1051,6 +1051,27 @@ if __name__ == "__main__":
     with open("test_failure_tables/model_results.json", "w", encoding="UTF-8") as fp:
         json.dump(model_results, fp, indent=4, ensure_ascii=False)
 
+    target_workflow = "huggingface/transformers/.github/workflows/self-scheduled.yml@refs/heads/main"
+    target_workflow = "huggingface/transformers/.github/workflows/self-scheduled.yml@refs/heads/color_report"
+    if os.environ.get("CI_WORKFLOW_REF") == target_workflow:
+        # Get the last previously completed CI's failure tables
+        artifact_names = ["test_failure_tables"]
+        output_dir = os.path.join(os.getcwd(), "previous_reports")
+        os.makedirs(output_dir, exist_ok=True)
+        prev_tables = get_last_daily_ci_reports(
+            artifact_names=artifact_names, output_dir=output_dir, token=os.environ["ACCESS_REPO_INFO_TOKEN"]
+        )
+
+        # if the last run produces artifact named `test_failure_tables`
+        if (
+            "test_failure_tables" in prev_tables
+            and "test_failure_tables/model_results.json" in prev_tables["test_failure_tables"]
+        ):
+            with open("test_failure_tables/model_results.json", "r", encoding="UTF-8") as fp:
+                prev_model_results = json.load(fp)
+                print(prev_model_results)
+                print("Hello ....")
+
     message = Message(title, ci_title, model_results, additional_results, selected_warnings=selected_warnings)
 
     # # send report only if there is any failure (for push CI)
