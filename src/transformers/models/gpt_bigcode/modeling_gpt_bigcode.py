@@ -52,7 +52,7 @@ GPT_BIGCODE_PRETRAINED_MODEL_ARCHIVE_LIST = [
 # Use separate functions for each case because conditionals prevent kernel fusion.
 # TODO: Could have better fused kernels depending on scaling, dropout and head mask.
 #  Is it doable without writing 32 functions?
-@torch.jit.script
+@torch.jit.script_if_tracing
 def upcast_masked_softmax(
     x: torch.Tensor, mask: torch.Tensor, mask_value: torch.Tensor, scale: float, softmax_dtype: torch.dtype
 ):
@@ -63,7 +63,7 @@ def upcast_masked_softmax(
     return x
 
 
-@torch.jit.script
+@torch.jit.script_if_tracing
 def upcast_softmax(x: torch.Tensor, scale: float, softmax_dtype: torch.dtype):
     input_dtype = x.dtype
     x = x.to(softmax_dtype) * scale
@@ -71,7 +71,7 @@ def upcast_softmax(x: torch.Tensor, scale: float, softmax_dtype: torch.dtype):
     return x
 
 
-@torch.jit.script
+@torch.jit.script_if_tracing
 def masked_softmax(x: torch.Tensor, mask: torch.Tensor, mask_value: torch.Tensor):
     x = torch.where(mask, x, mask_value)
     x = torch.nn.functional.softmax(x, dim=-1)
